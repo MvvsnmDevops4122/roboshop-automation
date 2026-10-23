@@ -29,3 +29,4 @@ do
     echo "The instance ID of the launched instance is: $instance_id"
 done
 
+
