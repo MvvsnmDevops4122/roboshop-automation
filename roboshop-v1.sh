@@ -6,13 +6,13 @@
 # Then update the R53 records with the new IP address
 
 ami_id="ami-0055977a6e828a4f4"
-instance_type="t2.micro"
+instance_type="t3.micro"
 domain_name="mvvsnm.online"
 hosted_zone_id="Z076746614D87GD4SF3TG"
 
 echo "The start time of the script is: $(date +"%F %T")"
 
-# Lanch ec2 instance and resove the instance id of the launched instance
+# Launch ec2 instance and resolve the instance id of the launched instance
 
 for instance in "$@"
 do
