@@ -14,17 +14,18 @@ echo "The start time of the script is: $(date +"%F %T")"
 
 # Lanch ec2 instance and resove the instance id of the launched instance
 
-for instance in $@  # Lanch ec2 instance and resove the instance id of the launched instance
+for instance in "$@"
 do
-    echo "Going to launch the instance : $instance"
-    instance_id=$(aws ec2 run-instances \
-            --image-id $ami_id \
-            --instance-type $instance_type \
-            --security-groups "roboshop-common-sg" "roboshop-${instance}-sg" \
-            --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=roboshop-${instance}}]" \
-            --query 'Instances[0].InstanceId' \
-            --output text)
+    echo "Going to launch the instance: $instance"
 
-    echo "The instance id of the launched instance is: $instance_id"
+    instance_id=$(aws ec2 run-instances \
+        --image-id "$ami_id" \
+        --instance-type "$instance_type" \
+        --security-groups "roboshop-common-sg" "roboshop-${instance}-sg" \
+        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=roboshop-${instance}}]" \
+        --query 'Instances[0].InstanceId' \
+        --output text)
+
+    echo "The instance ID of the launched instance is: $instance_id"
 done
 
