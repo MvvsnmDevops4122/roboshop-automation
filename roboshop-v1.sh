@@ -5,5 +5,5 @@
 # Then get the IP address of the instance
 # Then update the R53 records with the new IP address
 
-echo "The start time of the script is: $(date +%F %T)"
+echo "The start time of the script is: $(date +"%F %T")"
 
