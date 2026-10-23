@@ -44,13 +44,11 @@ do
             --output text)
         r53_record_name=$instance.$domain_name
     fi
-    
-    echo "The IP address of $instance : $ip_address"
 
     # Update the R53 records with the new IP address
 
-    echo "recored_name: $r53_record_name"
-    echo "Going to update the R53 records with the new IP address"
+    echo "dns_record_name: $r53_record_name"
+
     aws route53 change-resource-record-sets \
         --hosted-zone-id "$hosted_zone_id" \
         --change-batch '{
