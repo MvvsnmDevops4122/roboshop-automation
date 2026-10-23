@@ -26,7 +26,7 @@ do
         --query 'Instances[0].InstanceId' \
         --output text)
 
-    echo "The instance ID of the launched instance is: $instance_id"
+    echo "The instance ID of $instance : $instance_id"
 done
 
 
