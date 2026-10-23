@@ -14,6 +14,14 @@ echo "The start time of the script is: $(date +"%F %T")"
 
 for instance in $@
 do
-    echo "Going to launch the instance for $instance"
+    echo "Going to launch the instance : $instance"
+    instance_id=$(aws ec2 run-instances \
+            --image-id $ami_id \
+            --instance-type $instance_type \
+            --security-groups "roboshop-common-sh" "roboshop-$instance-sg" \
+            --query 'Instances[0].InstanceId' \
+            --output text)
+
+    echo "The instance id of the launched instance is: $instance_id"
 done
 
