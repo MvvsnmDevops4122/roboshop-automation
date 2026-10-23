@@ -20,7 +20,7 @@ do
     instance_id=$(aws ec2 run-instances \
             --image-id $ami_id \
             --instance-type $instance_type \
-            --security-groups "roboshop-common-sg","roboshop-${instance}-sg" \
+            --security-groups "roboshop-common-sg" "roboshop-${instance}-sg" \
             --query 'Instances[0].InstanceId' \
             --output text)
 
