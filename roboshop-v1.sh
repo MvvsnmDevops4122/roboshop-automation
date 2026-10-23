@@ -11,8 +11,6 @@ instance_type="t3.micro"
 domain_name="mvvsnm.online"
 hosted_zone_id="Z076746614D87GD4SF3TG"
 
-echo "The start time of the script is: $(date +"%F %T")"
-
 # Launch ec2 instance and resolve the instance id of the launched instance
 
 for instance in "$@"
@@ -50,6 +48,7 @@ do
     echo "The IP address of $instance : $ip_address"
 
     # Update the R53 records with the new IP address
+
     echo "recored_name: $r53_record_name"
     echo "Going to update the R53 records with the new IP address"
     aws route53 change-resource-record-sets \
@@ -66,9 +65,6 @@ do
                 }
             }]
         }'
-
-    echo "The R53 records updated successfully for $instance with the new IP address: $ip_address"
 done
 
-echo "The end time of the script is: $(date +"%F %T")"
-echo "Timetaken to execute the script: $SECONDS seconds"
+echo "The R53 records updated successfully for $instance."
