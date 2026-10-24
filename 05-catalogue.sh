@@ -3,6 +3,7 @@
 user_id=$(id -u)
 logs_folder="/var/log/roboshop"
 logs_file="${logs_folder}/${0}.log"
+domain_name="mvvsnm.online"
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -44,9 +45,40 @@ id roboshop &>> $logs_file
 if [ $? == 0 ]; then
     echo -e "$(timestamp) [INFO] Roboshop user already exists...${Y}SKIPPING${N}"
 else
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
-    validate $? "Creating Roboshop system user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $logs_file
+    validate $? "Creating Roboshop system user" 
 fi
+
+# Create the /app directory if it does not exist. This is the home directory for the roboshop user.
+
+mkdir -p /app
+validate $? "Creating /app directory"
+
+# Download the catalogue application code from the GitHub repository.
+
+curl -L -o /tmp/catalogue.zip https://raw.githubusercontent.com/daws-92s/roboshop-documentation/refs/heads/main/artifacts/catalogue-v4.zip &>> $logs_file
+validate $? "Downloading catalogue application code"
+
+# Unzip the downloaded code into the /app directory.
+cd /app
+unzip -o /tmp/catalogue.zip &>> $logs_file
+validate $? "Unzipping catalogue application code"
+
+# Install the required nodejs dependencies for the catalogue application.
+npm install &>> $logs_file
+validate $? "Installing nodejs dependencies for catalogue application"
+
+# Update the catalogue.service file with the correct domain name and copy it to the systemd directory.
+
+sed -i -e "s/DOMAIN_NAME/${domain_name}/" catalogue.service
+cp catalogue.service /etc/systemd/system/catalogue.service
+
+# Reload the systemd daemon to recognize the new service, enable it to start on boot, and start the service.
+
+systemctl daemon-reload  &>> $logs_file
+systemctl enable catalogue &>> $logs_file
+systemctl start catalogue  &>> $logs_file
+validate $? "Starting and enabling catalogue service"
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
