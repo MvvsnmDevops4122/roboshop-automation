@@ -110,9 +110,5 @@ else
     
 fi
 
-# Load the master data into the MongoDB database using the mongosh client and the provided master-data.js script.
-
-mongosh --host mongodb.${domain_name} </app/db/master-data.js
-
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
