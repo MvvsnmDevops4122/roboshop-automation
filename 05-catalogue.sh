@@ -32,13 +32,21 @@ echo "$(timestamp) [INFO] ==== Script started Execution =====" | tee -a $logs_fi
 
 # Disable the existing nodejs module and enable the required version of nodejs module and install nodejs
 
-dnf module disable nodejs -y
-dnf module enable nodejs:24 -y
-dnf install nodejs -y
+dnf module disable nodejs -y &>> $logs_file
+dnf module enable nodejs:24 -y &>> $logs_file
+dnf install nodejs -y &>> $logs_file
 
 validate $? "Installing NodeJS"
 
-useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
+# Verify if the roboshop user already exist or not. If not then create the user.
+
+id roboshop &>> $logs_file
+if [ $? == 0 ]; then
+    echo -e "$(timestamp) [INFO] Roboshop user already exists...${Y}SKIPPING${N}"
+else
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
+    validate $? "Creating Roboshop system user"
+fi
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
