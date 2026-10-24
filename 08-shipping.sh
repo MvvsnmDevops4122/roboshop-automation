@@ -37,7 +37,17 @@ dnf module enable maven:3.9 -y &>> $logs_file
 dnf install maven java-25-openjdk-devel -y &>> $logs_file
 validate $? "Installing Maven and Java"
 
+# Set Java 25 as the default version using the alternatives command.
+alternatives --set java /usr/lib/jvm/java-25-openjdk/bin/java &>> $logs_file
+validate $? "Setting Java 25 as the default version"
 
+# set the JAVA_HOME environment variable to Maven should know which Java version to use. 
+# This is done by creating a new file in the /etc/profile. directory and adding the JAVA_HOME variable to it. 
+# The source command is then used to load the new environment variable into the current shell session.
+echo "export JAVA_HOME=$(dirname $(dirname $(readlink -f /usr/bin/java)))" > /etc/profile.d/java.sh
+source /etc/profile.d/java.sh
+echo $JAVA_HOME
+validate $? "Setting JAVA_HOME environment variable for Maven"
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
