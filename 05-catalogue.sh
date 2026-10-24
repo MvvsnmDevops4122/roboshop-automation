@@ -4,6 +4,7 @@ user_id=$(id -u)
 logs_folder="/var/log/roboshop"
 logs_file="${logs_folder}/${0}.log"
 domain_name="mvvsnm.online"
+scripts_dir=$(dirname $(realpath $0))
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -68,10 +69,10 @@ validate $? "Unzipping catalogue application code"
 npm install &>> $logs_file
 validate $? "Installing nodejs dependencies for catalogue application"
 
-# Update the catalogue.service file with the correct domain name and copy it to the systemd directory.
+# Replace the placeholder DOMAIN_NAME in the catalogue.service file with the actual domain name.
 
-sed -i -e "s/DOMAIN_NAME/${domain_name}/" catalogue.service
-cp catalogue.service /etc/systemd/system/catalogue.service
+sed -i -e "s/DOMAIN_NAME/${domain_name}/" $scripts_dir/catalogue.service
+cp $scripts_dir/catalogue.service /etc/systemd/system/catalogue.service
 
 # Reload the systemd daemon to recognize the new service, enable it to start on boot, and start the service.
 
