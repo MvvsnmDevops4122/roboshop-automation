@@ -50,6 +50,11 @@ else
     validate $? "Creating Roboshop system user" 
 fi
 
+# Remove the existing code from the /app directory to ensure a clean installation of the catalogue application.
+
+rm -rf /app/* &>> $logs_file
+validate $? "Removing old code from /app directory"
+
 # Create the /app directory if it does not exist. This is the home directory for the roboshop user.
 
 mkdir -p /app
