@@ -86,10 +86,8 @@ dnf install mysql -y &>> $logs_file
 validate $? "Installing MySQL client"
 
 # Execute the master-data.sql script to create the necessary database schema and tables for the shipping application.
-mysql -h mongodb.$(domain_name) -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
+mysql -h mysql.$(domain_name) -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
 validate $? "Executing master-data.sql script"
-
-
 
 
 # Replace the placeholder DOMAIN_NAME in the shipping.service file with the actual domain name.
