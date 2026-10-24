@@ -91,10 +91,28 @@ validate $? "Starting and enabling catalogue service"
 cp $scripts_dir/mongo.repo /etc/yum.repos.d/mongo.repo &>> $logs_file
 validate $? "Adding MongoDB repo"
 
+
 # Install the MongoDB shell client to allow interaction with the MongoDB database.
 
 dnf install mongodb-mongosh -y &>> $logs_file
 validate $? "Installing MongoDB client"
+
+# Check if the products collection in the catalogue database already has data. If not, load the master data into the collection using the provided master-data.js script.
+
+product_count=$(mongosh --host mongo.${domain_name} --quiet --eval 'db.getSiblingDB("catalogue").products.countDocuments()')
+validate $? "Checking if the products collection already has data"
+
+if [ $product_count -eq 0 ]; then
+    mongosh --host mongo.${domain_name} </app/db/master-data.js
+    validate $? "Loading master data into products collection"
+else
+    echo -e "$(timestamp) [INFO] Products collection already has data...${Y}SKIPPING${N}"
+    
+fi
+
+# Load the master data into the MongoDB database using the mongosh client and the provided master-data.js script.
+
+mongosh --host mongo.${domain_name} </app/db/master-data.js
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
