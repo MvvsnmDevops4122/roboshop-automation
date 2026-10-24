@@ -81,5 +81,15 @@ systemctl enable catalogue &>> $logs_file
 systemctl start catalogue  &>> $logs_file
 validate $? "Starting and enabling catalogue service"
 
+# Add the MongoDB repository to the system's package manager and install the MongoDB client.
+
+cp $scripts_dir/mongo.repo /etc/yum.repos.d/mongo.repo &>> $logs_file
+validate $? "Adding MongoDB repo"
+
+# Install the MongoDB shell client to allow interaction with the MongoDB database.
+
+dnf install mongodb-mongosh -y &>> $logs_file
+validate $? "Installing MongoDB client"
+
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
