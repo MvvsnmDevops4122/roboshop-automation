@@ -31,45 +31,33 @@ validate(){
 }
 
 echo "$(timestamp) [INFO] ==== Script started Execution =====" | tee -a $logs_file
+ 
+dnf module disable nginx -y &>>$logs_file
+dnf module enable nginx:1.26 -y &>>$logs_file
+dnf install nginx -y &>>$logs_file
+validate $? "Installing nginx"
 
-dnf install python3.14 python3.14-pip -y &>> $logs_file
-validate $? "Installing Python 3.14"
+systemctl enable nginx &>>$logs_file
+systemctl start nginx &>>$logs_file
+validate $? "Enable and start nginx"
 
-id roboshop &>> $logs_file
-if [ $? -ne 0 ]; then
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $logs_file
-    validate $? "Creating system user"
-else
-    echo -e "$(timestamp) [INFO] System user roboshop already exist...${Y}SKIPPING${N}"
-fi
+rm -rf /usr/share/nginx/html/* &>>$logs_file
+validate $? "Removing default nginx content"
 
-rm -rf /app
-validate $? "Removing old code"
+curl -L -o /tmp/frontend.zip https://raw.githubusercontent.com/daws-92s/roboshop-documentation/refs/heads/main/artifacts/frontend-v4.zip &>>$logs_file
+cd /usr/share/nginx/html &>> $logs_file
+unzip /tmp/frontend.zip &>> $logs_file
+validate $? "Downloading and unzipping frontend code"
 
-mkdir -p /app
-validate $? "Creating app directory"
+sed -i "s/DOMAIN_NAME/$domain_name/g" "$scripts_dir/roboshop.conf"
+cp "$scripts_dir/roboshop.conf" /etc/nginx/default.d/roboshop.conf
+validate $? "Copied roboshop config"
 
-curl -L -o /tmp/payment.zip https://raw.githubusercontent.com/daws-92s/roboshop-documentation/refs/heads/main/artifacts/payment-v4.zip &>> $logs_file
-validate $? "Downloading payment"
+nginx -t &>> $logs_file
+validate $? "Nginx Configuration"
 
-cd /app
-unzip /tmp/payment.zip &>> $logs_file
-validate $? "Unzipping payment"
-
-python3.14 -m venv /app/.venv &>> $logs_file
-validate $? "Creating virtual environment"
-
-/app/.venv/bin/pip install -r requirements.txt &>> $logs_file
-validate $? "Installing dependencies"
-
-sed -i "s/DOMAIN_NAME/$domain_name/g" "$scripts_dir/payment.service"
-cp "$scripts_dir/payment.service" /etc/systemd/system/payment.service
-
-systemctl daemon-reload &>> $logs_file
-systemctl enable payment &>> $logs_file
-systemctl restart payment &>> $logs_file
-validate $? "Starting/Restaring payment"
-
+systemctl restart nginx
+validate $? "Restarting nginx"
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
