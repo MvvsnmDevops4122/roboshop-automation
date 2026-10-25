@@ -82,6 +82,10 @@ validate $? "Installing Maven dependencies for shipping application"
 mv target/shipping.jar shipping.jar
 validate $? "Moving shipping.jar to /app directory"
 
+# Replace the placeholder DOMAIN_NAME in the cart.service file with the actual domain name.
+sed -i -e "s/DOMAIN_NAME/${domain_name}/" $scripts_dir/shipping.service
+cp $scripts_dir/shipping.service /etc/systemd/system/shipping.service
+
 # Install MySQL client to connect to the MySQL database server. This is required for the shipping application to interact with the database.
 dnf install mysql -y &>> $logs_file
 validate $? "Installing MySQL client"
