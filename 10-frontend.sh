@@ -3,14 +3,13 @@
 user_id=$(id -u)
 logs_folder="/var/log/roboshop"
 logs_file="${logs_folder}/${0}.log"
-domain_name="mvvsnm.online"
-scripts_dir=$(dirname $(realpath $0))
+domain_name="daws92s.store"
+scripts_dir=$(dirname "$(realpath "$0")")
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-# 
 if [ $user_id -ne 0 ]; then
     echo "Please run this script with sudo access.."
     exit 1
@@ -33,33 +32,44 @@ validate(){
 
 echo "$(timestamp) [INFO] ==== Script started Execution =====" | tee -a $logs_file
 
+dnf install python3.14 python3.14-pip -y &>> $logs_file
+validate $? "Installing Python 3.14"
 
-dnf module disable nginx -y &>> $logs_file
-dnf module enable nginx:1.26 -y &>> $logs_file
-dnf install nginx -y &>> $logs_file
-validate $? "Installing Ngnix"
+id roboshop &>> $logs_file
+if [ $? -ne 0 ]; then
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $logs_file
+    validate $? "Creating system user"
+else
+    echo -e "$(timestamp) [INFO] System user roboshop already exist...${Y}SKIPPING${N}"
+fi
 
-systemctl enable nginx &>> $logs_file
-systemctl start nginx  &>> $logs_file
-validate $? "Enable and start Ngnix"
- 
-rm -rf /usr/share/nginx/html/*  &>> $logs_file
-validate $? "Removing default code Ngnix"
+rm -rf /app
+validate $? "Removing old code"
 
-curl -L -o /tmp/frontend.zip https://raw.githubusercontent.com/daws-92s/roboshop-documentation/refs/heads/main/artifacts/frontend-v4.zip &>> $logs_file
-cd /usr/share/nginx/html &>> $logs_file
-unzip /tmp/frontend.zip &>> $logs_file
-validate $? "Download and Extract frontend code"
+mkdir -p /app
+validate $? "Creating app directory"
 
-# Replace the placeholder DOMAIN_NAME in the roboshop.conf file with the actual domain name.
-sed -i -e "s/DOMAIN_NAME/${domain_name}/" $scripts_dir/roboshop.conf 
-cp $scripts_dir/roboshop.conf /etc/systemd/system/roboshop.conf
+curl -L -o /tmp/payment.zip https://raw.githubusercontent.com/daws-92s/roboshop-documentation/refs/heads/main/artifacts/payment-v4.zip &>> $logs_file
+validate $? "Downloading payment"
 
-nginx -t &>> $logs_file
-validate $? "Nginx configuration"
- 
-systemctl restart nginx 
-validate $? "Nginx restart"
+cd /app
+unzip /tmp/payment.zip &>> $logs_file
+validate $? "Unzipping payment"
+
+python3.14 -m venv /app/.venv &>> $logs_file
+validate $? "Creating virtual environment"
+
+/app/.venv/bin/pip install -r requirements.txt &>> $logs_file
+validate $? "Installing dependencies"
+
+sed -i "s/DOMAIN_NAME/$domain_name/g" "$scripts_dir/payment.service"
+cp "$scripts_dir/payment.service" /etc/systemd/system/payment.service
+
+systemctl daemon-reload &>> $logs_file
+systemctl enable payment &>> $logs_file
+systemctl restart payment &>> $logs_file
+validate $? "Starting/Restaring payment"
+
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
