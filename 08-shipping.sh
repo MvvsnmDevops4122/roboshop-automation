@@ -86,10 +86,21 @@ validate $? "Moving shipping.jar to /app directory"
 dnf install mysql -y &>> $logs_file
 validate $? "Installing MySQL client"
 
-# Load the master-data.sql script to create the necessary database schema and tables for the shipping application.
-mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
-validate $? "Loading master-data.sql script"
+count=$(mysql -h mysql.$domain_name -u root -pRoboShop@1 -N -B -e "SELECT COUNT(*) FROM cities.cities;" 2>> $logs_file)
+if [ -z $count || $count=0 ]
+    mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
+    validate $? "Loading master-data.sql script"
+else 
+   echo -e "$(timestamp) [INFO] Master DB already loaded..${Y}SKIPPING${N}"
+fi
 
+mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/app-user.sql
+validate $? "creating app user"
+
+systemctl daemon-reload &>> $logs_file
+systemctl enable shipping &>> $logs_file
+systemctl restart shipping 
+validate $? "Enable and start the shipping service"
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
