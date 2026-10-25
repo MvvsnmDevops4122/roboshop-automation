@@ -4,23 +4,27 @@ user_id=$(id -u)
 logs_folder="/var/log/roboshop"
 logs_file="${logs_folder}/${0}.log"
 domain_name="mvvsnm.online"
-scripts_dir=$(dirname $(realpath $0))
+scripts_dir=$(dirname $(realpath $0)) # get the directory path of the current script
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
+# check if the script is run as sudo or not. if not then exit the script with error message
 if [ $user_id -ne 0 ]; then
     echo "Please run this script with sudo access.."
     exit 1
 fi
 
+# create the logs folder if not exists
 mkdir -p $logs_folder
 
+# timestamp function to get the current date and time in the format YYYY-MM-DD HH:MM:SS
 timestamp(){
     date "+%F %T" 
 }
 
+# validate function to check the exit status of the command and log the result in the log file
 validate(){
     if [ $1 -ne 0 ]; then
         echo -e "$(timestamp) [ERROR] ${2}..${R}FAILED${N}" | tee -a $logs_file
@@ -30,14 +34,15 @@ validate(){
     fi
 }
 
+# start the script execution and log the start time
 echo "$(timestamp) [INFO] ==== Script started Execution =====" | tee -a $logs_file
 
 # Disable the existing nodejs module and enable the required version of nodejs module and install nodejs
 dnf module disable nodejs -y &>> $logs_file
 dnf module enable nodejs:24 -y &>> $logs_file
 dnf install nodejs -y &>> $logs_file
-
 validate $? "Installing NodeJS"
+
 
 # Verify if the roboshop user already exist or not. If not then create the user.
 id roboshop &>> $logs_file
@@ -80,6 +85,7 @@ systemctl start catalogue  &>> $logs_file
 validate $? "Starting and enabling catalogue service"
 
 # Add the MongoDB repository to the system's package manager and install the MongoDB client.
+sed -i -e "s/DOMAIN_NAME/${domain_name}/" $scripts_dir/mongo.repo
 cp $scripts_dir/mongo.repo /etc/yum.repos.d/mongo.repo &>> $logs_file
 validate $? "Adding MongoDB repo"
 
@@ -92,6 +98,7 @@ validate $? "Installing MongoDB client"
 product_count=$(mongosh --host mongodb.${domain_name} --quiet --eval 'db.getSiblingDB("catalogue").products.countDocuments()')
 validate $? "Checking if the products collection already has data"
 
+# If the products collection is empty, load the master data into it using the master-data.js script. Otherwise, skip this step.
 if [ $product_count -eq 0 ]; then
     mongosh --host mongodb.${domain_name} </app/db/master-data.js
     validate $? "Loading master data into products collection"

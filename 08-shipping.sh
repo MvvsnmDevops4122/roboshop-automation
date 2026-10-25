@@ -10,6 +10,7 @@ G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
+# 
 if [ $user_id -ne 0 ]; then
     echo "Please run this script with sudo access.."
     exit 1
@@ -44,7 +45,7 @@ validate $? "Setting Java 25 as the default version"
 # set the JAVA_HOME environment variable to Maven should know which Java version to use. 
 # This is done by creating a new file in the /etc/profile.d/ directory and adding the JAVA_HOME variable to it. 
 echo "export JAVA_HOME=$(dirname $(dirname $(readlink -f /usr/bin/java)))" > /etc/profile.d/java.sh
-source /etc/profile.d/java.sh
+source /etc/profile.d/java.sh 
 validate $? "Setting JAVA_HOME environment variable for Maven"
 
 # Verify if the roboshop user already exist or not. If not then create the user.
@@ -89,16 +90,6 @@ validate $? "Installing MySQL client"
 mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
 validate $? "Loading master-data.sql script"
 
-
-# Replace the placeholder DOMAIN_NAME in the shipping.service file with the actual domain name.
-sed -i -e "s/DOMAIN_NAME/${domain_name}/" $scripts_dir/shipping.service
-cp $scripts_dir/shipping.service /etc/systemd/system/shipping.service
-
-# Reload the systemd daemon to recognize the new service, enable it to start on boot, and start the service.
-systemctl daemon-reload  &>> $logs_file
-systemctl enable shipping &>> $logs_file
-systemctl start shipping  &>> $logs_file
-validate $? "Starting and enabling shipping service"
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
 echo "$(timestamp) [INFO] ==== Script completed Execution =====" | tee -a $logs_file
