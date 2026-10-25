@@ -34,8 +34,8 @@ validate(){
 echo "$(timestamp) [INFO] ==== Script started Execution =====" | tee -a $logs_file
 
 
-dnf install python3.14 python3.14-pip -y
-validate $? "Installing Python3.14"
+dnf install python3.14 python3.14-pip -y &>> $logs_file
+validate $? "Installing Python 3.14"
 
 
 # Verify if the roboshop user already exist or not. If not then create the user.
