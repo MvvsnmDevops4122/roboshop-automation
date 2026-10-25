@@ -87,8 +87,8 @@ dnf install mysql -y &>> $logs_file
 validate $? "Installing MySQL client"
 
 # Load the master-data.sql script to create the necessary database schema and tables for the shipping application.
-# mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
-# validate $? "Loading master-data.sql script"
+mysql -h mysql.$domain_name -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $logs_file
+validate $? "Loading master-data.sql script"
 
 
 echo "$(timestamp) [INFO] Script completed in $SECONDS seconds"
